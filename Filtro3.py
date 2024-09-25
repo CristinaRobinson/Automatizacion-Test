@@ -191,8 +191,6 @@ root.mainloop()
 
 -----//////
 
-Based on Sandra Diyarza's statements during the videoconference and the findings of the investigation, it was concluded that there is no evidence to confirm any disclosure of confidential information. Furthermore, it was confirmed that no ongoing romantic relationship exists beyond a couple of encounters in December. Sandra demonstrated openness, transparency, and confidence in her responses, emphasizing her understanding of the importance of maintaining confidentiality and the trust placed in her. Consequently, no further action was deemed necessary.
-
 
 
 
