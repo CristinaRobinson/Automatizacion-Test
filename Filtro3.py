@@ -189,8 +189,16 @@ root.mainloop()
 
 
 
------
+-----//////
 
+
+The case #1233 was submitted through the Speak Up Line. Last week, the individual approached Hugo, the manager involved in this report, to discuss the situation. During the conversation, two specific actions were requested from Hugo:
+
+Firstly, in his next team meeting, he was asked to clarify to his team the language he has used, which may have been misinterpreted as threats. He was instructed to address this as a personal concern without mentioning the report itself or identifying any specific individual associated with the examples discussed, as this matter should be handled privately.
+
+Secondly, he was advised to be cautious with his language and examples, ensuring that his focus remains on individuals' actions without referencing past events involving others.
+
+Mauricio, the Plant Manager, was also informed about this report. Please let it be known if any further assistance is required.
 
 
 
