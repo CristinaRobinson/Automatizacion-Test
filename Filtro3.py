@@ -191,8 +191,6 @@ root.mainloop()
 
 -----//////
 
-Case #1225 was reported through the Speak Up Line on August 7, alleging a relationship between two employees, Sandra and Hugo, and suggesting that Sandra had shared confidential HR information. Aileen Ruiz was interviewed by Compliance on September 3, where she confirmed the relationship between Sandra and Hugo but denied any knowledge of the alleged disclosure of confidential information. Additionally, it was confirmed that Sandra was inebriated at a year-end party in 2023 and kissed Hugo at the same event. However, Aileen did not confirm any knowledge regarding the sharing of confidential information.
-
 
 
 
