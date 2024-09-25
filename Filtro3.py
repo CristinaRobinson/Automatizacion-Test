@@ -191,12 +191,6 @@ root.mainloop()
 
 -----//////
 
-Case #1228 involves a compliance matter concerning the storekeeper, Natanael Lima. During the investigation, three individuals named in the complaint—Eleuterio Szulek, Alexandre José Hening, and Célio Elisandro Castanharo—were interviewed, and all stated that Natanael never treated them with a lack of respect, nor had they heard any complaints about his behavior from others. Alexandre José Hening remarked that while Natanael may seem somewhat reserved and may not always greet people, he has never experienced any disrespect from him. Additionally, QB’s HR team was consulted and described Natanael as a quiet, shy individual who had not shown any disrespectful conduct. There was mention of a past compliance issue regarding his promotion, which was perceived as being due to a friendship with the area manager. The person conducting the investigation expressed the opinion that Natanael’s promotion might have caused resentment from those filing the complaints. Further information is available if needed.
-
-Case #1228 was closed as unsubstantiated. During the investigation, all individuals interviewed, including those named in the complaint and QB’s HR team, confirmed that Natanael Lima had not shown any disrespectful behavior. The witnesses described him as a quiet and reserved person, and no further evidence was found to support the allegations. As a result, no further actions were taken.
-
-
-
 
 
 
