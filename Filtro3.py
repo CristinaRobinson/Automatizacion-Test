@@ -191,5 +191,4 @@ root.mainloop()
 
 -----//////
 
-In case #1205, the investigation confirmed Oscar's inappropriate behavior under stress, including intimidation, sarcasm, and explosive anger. Despite discussions and some improvement, passive-aggressive comments persisted. Interviews highlighted disrespectful interactions, and Oscar later acknowledged his conduct. A recommendation was made for a one-day unpaid suspension and training in teamwork, emotional intelligence, and conflict management.
 
