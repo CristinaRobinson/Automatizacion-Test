@@ -43,7 +43,11 @@ def calcular_fase_recordatorio(fecha_entrada):
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
 def process_moocs(files, folder):
-    moocs_data = defaultdict(lambda: {'cursos': [], 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
+    # Filtered list of MOOCs to check
+    moocs_filter = ["Ethics", "Anticorruption"]
+    
+    # Data structure to collect filtered results
+    moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
 
     for file in files:
         if file.endswith('.csv'):
@@ -52,46 +56,48 @@ def process_moocs(files, folder):
                 
                 for row in reader:
                     # Extract necessary data
-                    mooc_name = row.get('Mooc Name', 'N/A')
+                    mooc_name = row.get('Mooc Name', '')
                     name = row.get('Name', '')
                     email = row.get('Email', '')
-                    completion_status = row.get('Completion Status', '')
-                    completion_date = row.get('Completion Date', '')
-                    country = row.get('Country', '')
                     entry_date = row.get('Entry Date', '')
                     job_function = row.get('Job Function', '')
                     work_location = row.get('Work Location', '')
                     business_group = row.get('Business Group', '')
                     division = row.get('Division', '')
                     bau = row.get('BAU', '')
-                    
-                    if not name:
+                    completion_status = row.get('Completion Status', '').strip().lower()
+
+                    if not name or completion_status == "completed":
                         continue
                     
-                    # Collect data in dictionary
-                    moocs_data[name]['cursos'].append(mooc_name)
-                    moocs_data[name]['email'] = email
-                    moocs_data[name]['job_function'] = job_function
-                    moocs_data[name]['work_location'] = work_location
-                    moocs_data[name]['business_group'] = business_group
-                    moocs_data[name]['division'] = division
-                    moocs_data[name]['bau'] = bau
-                    
-                    # Calculate reminder phase
-                    if entry_date:
-                        moocs_data[name]['fecha'] = entry_date
-                        moocs_data[name]['fase_recordatorio'] = calcular_fase_recordatorio(entry_date)
-    
-    # Save the results to a CSV
+                    # Check if the MOOC is one of the filtered courses
+                    if mooc_name in moocs_filter:
+                        # Add unique pending MOOCs
+                        moocs_data[name]['moocs_pendientes'].add(mooc_name)
+                        moocs_data[name]['email'] = email
+                        moocs_data[name]['job_function'] = job_function
+                        moocs_data[name]['work_location'] = work_location
+                        moocs_data[name]['business_group'] = business_group
+                        moocs_data[name]['division'] = division
+                        moocs_data[name]['bau'] = bau
+                        
+                        # Calculate reminder phase based on entry date
+                        if entry_date:
+                            moocs_data[name]['fecha'] = entry_date
+                            moocs_data[name]['fase_recordatorio'] = calcular_fase_recordatorio(entry_date)
+
+    # Save results to CSV
     with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
-        writer.writerow(['Mooc Name', 'Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Cursos Pendientes', 'Fase de Recordatorio'])
+        writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
         
         for name, info in moocs_data.items():
+            # Consolidate the pending MOOCs into a comma-separated string
+            moocs_pendientes = ', '.join(info['moocs_pendientes'])
             writer.writerow([
-                ', '.join(info['cursos']), name, info['email'], info['job_function'],
-                info['work_location'], info['business_group'], info['division'],
-                info['bau'], info['cursos'], info['fase_recordatorio']
+                name, info['email'], info['job_function'], info['work_location'],
+                info['business_group'], info['division'], info['bau'],
+                moocs_pendientes, info['fase_recordatorio']
             ])
 
 def process_ecoi(files, folder):
