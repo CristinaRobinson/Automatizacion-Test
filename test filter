@@ -13,22 +13,33 @@ def browse_folder():
     folder = filedialog.askdirectory()
     return folder
 
-def calculate_declaration_status(latest_declaration):
-    try:
-        latest_declaration_dt = datetime.strptime(latest_declaration, "%d/%m/%Y")
-    except ValueError:
-        return "Expirado (Recordar)"
-    
+def calculate_declaration_status_and_reminders(creation_date):
     today = datetime.today()
-    one_year_ago = today - timedelta(days=365)
-    one_month_from_now = today + timedelta(days=30)
     
-    if latest_declaration_dt < one_year_ago:
+    # If creation_date is empty, return the invitation status
+    if not creation_date.strip():
+        return "Invitar a declarar"
+    
+    try:
+        creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+    except ValueError:
+        # If there's a problem parsing the date, treat as needing an invitation
+        return "Invitar a declarar"
+    
+    # Calculate the next due date for declaration (1 year after the creation date)
+    next_due_date = creation_date_dt + timedelta(days=365)
+    one_month_before = next_due_date - timedelta(days=30)
+    seven_days_before = next_due_date - timedelta(days=7)
+    
+    # Determine the appropriate reminder status
+    if today >= next_due_date:
         return "Expirado (Recordar)"
-    elif latest_declaration_dt < one_year_ago + timedelta(days=30):
+    elif today >= seven_days_before:
+        return "Expira en 7 días"
+    elif today >= one_month_before:
         return "Expira en 1 mes"
     else:
-        return ""
+        return ""  # Not within the reminder window
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
@@ -62,7 +73,7 @@ def process_moocs(files, folder):
                         
                         if entry_date:
                             moocs_data[name]['fecha'] = entry_date
-                            moocs_data[name]['fase_recordatorio'] = calculate_declaration_status(entry_date)
+                            moocs_data[name]['fase_recordatorio'] = calculate_declaration_status_and_reminders(entry_date)
 
     with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
@@ -109,8 +120,10 @@ def process_ecoi(files, folder):
                     bau = row.get('bau', '').strip()
                     employee_status = row.get('employee_status', '').strip()
 
-                    debe_status = calculate_declaration_status(latest_declaration)
+                    # Calculate whether a reminder is needed or if a new employee needs an invitation
+                    debe_status = calculate_declaration_status_and_reminders(creation_date)
 
+                    # Only add rows where reminder is needed or it's a new employee without a declaration
                     if debe_status:
                         ecoi_data.append({
                             'Debe': debe_status,
