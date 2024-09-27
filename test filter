@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import filedialog
 from collections import defaultdict
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
 
 def browse_files():
     files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
@@ -13,6 +12,14 @@ def browse_files():
 def browse_folder():
     folder = filedialog.askdirectory()
     return folder
+
+def add_one_year(date):
+    try:
+        # Try to add one year to the date
+        return date.replace(year=date.year + 1)
+    except ValueError:
+        # Handle leap year edge case (e.g., Feb 29 to Feb 28)
+        return date.replace(year=date.year + 1, day=28)
 
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
@@ -33,7 +40,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         return "Invitar a declarar"
     
     # Corrected: Calculate the next due date for declaration as exactly one year after creation_date
-    next_due_date = creation_date_dt + relativedelta(years=1)
+    next_due_date = add_one_year(creation_date_dt)
     days_to_expiry = (next_due_date - today).days
     
     # Normalize declaration_expired to lower case and strip any extra spaces
@@ -236,11 +243,3 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
-
-pip : The term 'pip' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling 
-of the name, or if a path was included, verify that the path is correct and try again.
-At line:1 char:1
-+ pip install python-dateutil
-+ ~~~
-    + CategoryInfo          : ObjectNotFound: (pip:String) [], CommandNotFoundException
-    + FullyQualifiedErrorId : CommandNotFoundException
