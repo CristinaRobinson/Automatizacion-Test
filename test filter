@@ -31,6 +31,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     try:
         # Strip extra spaces and handle both date and datetime formats
         creation_date = creation_date.strip()
+        # Parse with time if provided, otherwise parse just the date
         if " " in creation_date:
             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
         else:
@@ -54,7 +55,8 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         if days_to_expiry < 30:
             return f"{days_to_expiry} días para que expire"
         else:
-            months_to_expiry = days_to_expiry // 30
+            # Use the month difference between today and next_due_date
+            months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
             return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} para que expire"
     else:
         return "Expirado"  # In case it's exactly at the expiration or already expired
