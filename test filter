@@ -28,18 +28,13 @@ def calculate_declaration_status_and_reminders(creation_date):
     
     # Calculate the next due date for declaration (1 year after the creation date)
     next_due_date = creation_date_dt + timedelta(days=365)
-    one_month_before = next_due_date - timedelta(days=30)
-    seven_days_before = next_due_date - timedelta(days=7)
+    days_to_expiration = (next_due_date - today).days
     
-    # Determine the appropriate reminder status
-    if today >= next_due_date:
-        return "Expirado (Recordar)"
-    elif today >= seven_days_before:
-        return "Expira en 7 días"
-    elif today >= one_month_before:
-        return "Expira en 1 mes"
+    # Determine the appropriate message for how many days are left
+    if days_to_expiration >= 0:
+        return f"{days_to_expiration} días para que expire"
     else:
-        return ""  # Not within the reminder window
+        return "Expirado (Recordar)"
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
