@@ -40,7 +40,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     
     # Determine the appropriate message based on days left and declaration status
     if declaration_expired == 'expired':
-        return "Reminder"
+        return "Expirado"
     elif days_to_expiry > 0:
         # Generate message based on the number of days left
         if days_to_expiry < 30:
@@ -49,7 +49,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
             months_to_expiry = days_to_expiry // 30
             return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} para que expire"
     else:
-        return "Reminder"  # In case it's exactly at the expiration or already expired
+        return "Expirado"  # In case it's exactly at the expiration or already expired
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
@@ -148,7 +148,7 @@ def process_ecoi(files, folder):
                             'positive_answers': positive_answers,
                             'declaration_status': declaration_status,
                             'declaration_expired': declaration_expired,
-                            'latest_declaration': latest_declaration,
+                                                        'latest_declaration': latest_declaration,
                             'classification': classification,
                             'creation_date': creation_date,
                             'last_change_date': last_change_date,
@@ -232,19 +232,6 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
                           font=('Helvetica', 14), bg="#3498DB", fg="white", 
                           activebackground="#2980B9", activeforeground="white", padx=10, pady=10,
                           bd=0, relief="flat")
-
-Exception in Tkinter callback
-Traceback (most recent call last):
-  File "C:\Users\1vargacr\AppData\Local\Programs\Python\Python312\Lib\tkinter\__init__.py", line 1968, in __call__
-    return self.func(*args)
-           ^^^^^^^^^^^^^^^^
-  File "c:\Users\1vargacr\Desktop\ECOI & MOOCS\test.py", line 196, in button_ecoi_clicked
-    process_ecoi(files, folder)
-  File "c:\Users\1vargacr\Desktop\ECOI & MOOCS\test.py", line 165, in process_ecoi
-    with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-PermissionError: [Errno 13] Permission denied: 'C:/Users/1vargacr/Desktop/ECOI & MOOCS\\ecoi_resultados.csv'
-
 search_button.pack(pady=20)
 
 root.mainloop()
