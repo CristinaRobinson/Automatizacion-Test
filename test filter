@@ -21,7 +21,11 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         return "Invitar a declarar"
     
     try:
-        creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+        # Try parsing date with time if present
+        if " " in creation_date:
+            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
+        else:
+            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
     except ValueError:
         # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
