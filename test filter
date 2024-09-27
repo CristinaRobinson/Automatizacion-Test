@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog
 from collections import defaultdict
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 def browse_files():
     files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
@@ -31,8 +32,8 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
     
-    # Calculate the next due date for declaration (1 year after the creation date)
-    next_due_date = creation_date_dt + timedelta(days=365)
+    # Corrected: Calculate the next due date for declaration as exactly one year after creation_date
+    next_due_date = creation_date_dt + relativedelta(years=1)
     days_to_expiry = (next_due_date - today).days
     
     # Normalize declaration_expired to lower case and strip any extra spaces
@@ -148,7 +149,7 @@ def process_ecoi(files, folder):
                             'positive_answers': positive_answers,
                             'declaration_status': declaration_status,
                             'declaration_expired': declaration_expired,
-                                                        'latest_declaration': latest_declaration,
+                            'latest_declaration': latest_declaration,
                             'classification': classification,
                             'creation_date': creation_date,
                             'last_change_date': last_change_date,
