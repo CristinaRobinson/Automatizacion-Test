@@ -123,13 +123,6 @@ def process_ecoi(files, folder):
                 entry['bg'], entry['division'], entry['bau'], entry['employee_status']
             ])
 
-def button_moocs_clicked():
-    search_label.config(text="Iniciando procesamiento de MOOCs...")
-    files = browse_files()
-    folder = browse_folder()
-    process_moocs(files, folder)
-    search_label.config(text='Procesamiento de MOOCs completado. Resultados guardados en moocs_resultados.csv')
-
 def button_ecoi_clicked():
     search_label.config(text="Iniciando procesamiento de ECOI...")
     files = browse_files()
@@ -143,16 +136,6 @@ def search():
     window.geometry('350x150')
     window.configure(bg="#F1F1F1")
     
-    option_label = tk.Label(window, text='Seleccione una opción:', font=('Helvetica', 14), bg="#F1F1F1", fg="#333")
-    option_label.pack(pady=10)
-    
-    # Button for MOOCs
-    button_moocs = tk.Button(window, text="Procesar MOOCs", command=button_moocs_clicked, 
-                             font=('Helvetica', 12, 'bold'), bg="#6C63FF", fg="white", 
-                             activebackground="#3B3B98", activeforeground="white", padx=10, pady=5,
-                             bd=0, relief="flat")
-    button_moocs.pack(pady=10)
-
     # Button for ECOI
     button_ecoi = tk.Button(window, text="Procesar ECOI", command=button_ecoi_clicked, 
                             font=('Helvetica', 12, 'bold'), bg="#FF6C63", fg="white", 
@@ -161,11 +144,11 @@ def search():
     button_ecoi.pack(pady=10)
 
 root = tk.Tk()
-root.title('MOOCs y ECOI Tracking')
+root.title('ECOI Tracking')
 root.geometry('400x300')
 root.configure(bg="#2C3E50")
 
-title_label = tk.Label(root, text="Seguimiento de MOOCs y ECOI", font=('Helvetica', 18, 'bold'), bg="#2C3E50", fg="white")
+title_label = tk.Label(root, text="Seguimiento de ECOI", font=('Helvetica', 18, 'bold'), bg="#2C3E50", fg="white")
 title_label.pack(pady=20)
 
 search_label = tk.Label(root, text='', bg="#2C3E50", fg="white")
