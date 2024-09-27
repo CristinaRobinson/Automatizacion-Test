@@ -23,48 +23,49 @@ def add_one_year(date):
 
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
-    
+
     # If creation_date is empty, return the invitation status
     if not creation_date.strip():
         return "Invitar a declarar"
-    
+
     try:
         # Strip extra spaces and handle both date and datetime formats
         creation_date = creation_date.strip()
         # Parse with time if provided, otherwise parse just the date
-        if " " in creation_date:
-            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
-        else:
-            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+        creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
     except ValueError:
         # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
-    
-    # Corrected: Calculate the next due date for declaration as exactly one year after creation_date
+
+    # Add exactly one year to the creation_date to get the next due date
     next_due_date = add_one_year(creation_date_dt)
-    days_to_expiry = (next_due_date - today).days
+    
+    # Calculate the difference between today and next_due_date
+    delta = next_due_date - today
     
     # Normalize declaration_expired to lower case and strip any extra spaces
     declaration_expired = declaration_expired.strip().lower()
     
-    # Determine the appropriate message based on days left and declaration status
+    # If expired, mark as "Expirado"
     if declaration_expired == 'expired':
         return "Expirado"
-    elif days_to_expiry > 0:
-        # Generate message based on the number of months and remaining days
-        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
-        if next_due_date.day < today.day:
-            months_to_expiry -= 1
-
-        # Calculate the remaining days after calculating full months
-        days_in_month = (next_due_date - (today + timedelta(days=30*months_to_expiry))).days
+    
+    # Calculate months and days until expiration
+    if delta.days > 0:
+        # Calculate total months until expiration
+        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month) - (1 if today.day > next_due_date.day else 0)
         
+        # Calculate remaining days after accounting for full months
+        day_adjusted_date = today.replace(day=1) + timedelta(days=(next_due_date.day - 1))
+        remaining_days = (next_due_date - day_adjusted_date).days
+        
+        # If no months left, show only days
         if months_to_expiry == 0:
-            return f"{days_to_expiry} días para que expire"
+            return f"{delta.days} días para que expire"
         else:
-            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {days_in_month} día{'s' if days_in_month != 1 else ''} para que expire"
+            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''} para que expire"
     else:
-        return "Expirado"  # In case it's exactly at the expiration or already expired
+        return "Expirado"
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
