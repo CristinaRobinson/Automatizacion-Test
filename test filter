@@ -51,13 +51,18 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     if declaration_expired == 'expired':
         return "Expirado"
     elif days_to_expiry > 0:
-        # Generate message based on the number of days left
-        if days_to_expiry < 30:
+        # Generate message based on the number of months and remaining days
+        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
+        if next_due_date.day < today.day:
+            months_to_expiry -= 1
+
+        # Calculate the remaining days after calculating full months
+        days_in_month = (next_due_date - (today + timedelta(days=30*months_to_expiry))).days
+        
+        if months_to_expiry == 0:
             return f"{days_to_expiry} días para que expire"
         else:
-            # Use the month difference between today and next_due_date
-            months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
-            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} para que expire"
+            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {days_in_month} día{'s' if days_in_month != 1 else ''} para que expire"
     else:
         return "Expirado"  # In case it's exactly at the expiration or already expired
 
