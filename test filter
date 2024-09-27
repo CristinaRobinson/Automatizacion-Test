@@ -21,7 +21,8 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         return "Invitar a declarar"
     
     try:
-        # Try parsing date with time if present
+        # Strip extra spaces and handle both date and datetime formats
+        creation_date = creation_date.strip()
         if " " in creation_date:
             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
         else:
@@ -34,8 +35,11 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     next_due_date = creation_date_dt + timedelta(days=365)
     days_to_expiry = (next_due_date - today).days
     
-    # Determine the appropriate message based on days left
-    if declaration_expired.lower() == 'expired':
+    # Normalize declaration_expired to lower case and strip any extra spaces
+    declaration_expired = declaration_expired.strip().lower()
+    
+    # Determine the appropriate message based on days left and declaration status
+    if declaration_expired == 'expired':
         return "Reminder"
     elif days_to_expiry > 0:
         # Generate message based on the number of days left
