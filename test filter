@@ -43,10 +43,8 @@ def calcular_fase_recordatorio(fecha_entrada):
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
 def process_moocs(files, folder):
-    # Filtered list of MOOCs to check
-    moocs_filter = ["Ethics", "Anticorruption"]
+    moocs_filter = ["ethics", "anticorruption"]  # Ensure case-insensitive comparison
     
-    # Data structure to collect filtered results
     moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
 
     for file in files:
@@ -55,25 +53,25 @@ def process_moocs(files, folder):
                 reader = csv.DictReader(csv_file)
                 
                 for row in reader:
-                    # Extract necessary data
-                    mooc_name = row.get('Mooc Name', '')
-                    name = row.get('Name', '')
-                    email = row.get('Email', '')
-                    entry_date = row.get('Entry Date', '')
-                    job_function = row.get('Job Function', '')
-                    work_location = row.get('Work Location', '')
-                    business_group = row.get('Business Group', '')
-                    division = row.get('Division', '')
-                    bau = row.get('BAU', '')
+                    # Extract necessary data and normalize text
+                    mooc_name = row.get('Mooc Name', '').strip().lower()
+                    name = row.get('Name', '').strip()
+                    email = row.get('Email', '').strip()
+                    entry_date = row.get('Entry Date', '').strip()
+                    job_function = row.get('Job Function', '').strip()
+                    work_location = row.get('Work Location', '').strip()
+                    business_group = row.get('Business Group', '').strip()
+                    division = row.get('Division', '').strip()
+                    bau = row.get('BAU', '').strip()
                     completion_status = row.get('Completion Status', '').strip().lower()
 
-                    if not name or completion_status == "completed":
-                        continue
-                    
-                    # Check if the MOOC is one of the filtered courses
-                    if mooc_name in moocs_filter:
+                    # Debug print statements
+                    print(f"Processing row - Name: {name}, Mooc Name: {mooc_name}, Completion Status: {completion_status}")
+
+                    # Check if the course is in the filtered list and is not completed
+                    if mooc_name in moocs_filter and completion_status != "completed":
                         # Add unique pending MOOCs
-                        moocs_data[name]['moocs_pendientes'].add(mooc_name)
+                        moocs_data[name]['moocs_pendientes'].add(mooc_name.capitalize())  # Capitalize to display correctly
                         moocs_data[name]['email'] = email
                         moocs_data[name]['job_function'] = job_function
                         moocs_data[name]['work_location'] = work_location
@@ -91,8 +89,8 @@ def process_moocs(files, folder):
         writer = csv.writer(results_file)
         writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
         
+        # Write filtered and processed results
         for name, info in moocs_data.items():
-            # Consolidate the pending MOOCs into a comma-separated string
             moocs_pendientes = ', '.join(info['moocs_pendientes'])
             writer.writerow([
                 name, info['email'], info['job_function'], info['work_location'],
