@@ -40,7 +40,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
     
-    # Corrected: Calculate the next due date for declaration as exactly one year after creation_date
+    # Calculate the next due date for declaration as exactly one year after creation_date
     next_due_date = add_one_year(creation_date_dt)
     days_to_expiry = (next_due_date - today).days
     
@@ -51,18 +51,26 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     if declaration_expired == 'expired':
         return "Expirado"
     elif days_to_expiry > 0:
-        # Generate message based on the number of months and remaining days
+        # Calculate the exact number of months to expiry
         months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
+        
+        # If the day of the next_due_date is earlier than today's day, subtract one month
         if next_due_date.day < today.day:
             months_to_expiry -= 1
+            
+        # Calculate the start of the month after accounting for months
+        start_of_expiry_month = today + timedelta(days=30*months_to_expiry)
+        remaining_days = (next_due_date - start_of_expiry_month).days
 
-        # Calculate the remaining days after calculating full months
-        days_in_month = (next_due_date - (today + timedelta(days=30*months_to_expiry))).days
+        # Ensure remaining_days is within the correct range
+        if remaining_days < 0:
+            remaining_days = (next_due_date - (start_of_expiry_month - timedelta(days=30))).days
         
+        # Format the output correctly
         if months_to_expiry == 0:
             return f"{days_to_expiry} días para que expire"
         else:
-            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {days_in_month} día{'s' if days_in_month != 1 else ''} para que expire"
+            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''} para que expire"
     else:
         return "Expirado"  # In case it's exactly at the expiration or already expired
 
