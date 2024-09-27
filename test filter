@@ -236,3 +236,11 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
+
+pip : The term 'pip' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling 
+of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ pip install python-dateutil
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (pip:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
