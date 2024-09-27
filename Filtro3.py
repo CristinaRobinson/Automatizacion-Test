@@ -191,11 +191,5 @@ root.mainloop()
 
 -----//////
 
-In case #1205, it is confirmed that the incidents described in the report occurred, as a witness was present during the confrontation. The leadership style demonstrated by Oscar under stress included intimidation, sarcasm, explosive anger, and a lack of openness to listen to explanations. As the HR Manager, several personal conversations were held with Oscar to address these inappropriate behaviors. While instances of anger outbursts have diminished since joining the plant, passive-aggressive comments, sarcastic remarks, or mockery toward others' work performance or characteristics, such as voice modulation when presenting a topic, still persist.
-
-Last week, five interviews were conducted via Teams, and the reports attached revealed common denominators: a lack of respect toward interviewees, Oscar’s inappropriate way of addressing people, and comments directed at individuals rather than the subject at hand. It is recommended that the local RK have a conversation with their N+1, followed by a discussion with Oscar to gauge his acknowledgment of the behavior.
-
-Additionally, an interview was conducted with Oscar, where he essentially recognized his inappropriate behavior towards some team members. The suggestion is to impose at least one day of unpaid suspension and to enroll him in MOOCs on teamwork, emotional intelligence, and conflict management.
-
-
+In case #1205, the investigation confirmed Oscar's inappropriate behavior under stress, including intimidation, sarcasm, and explosive anger. Despite discussions and some improvement, passive-aggressive comments persisted. Interviews highlighted disrespectful interactions, and Oscar later acknowledged his conduct. A recommendation was made for a one-day unpaid suspension and training in teamwork, emotional intelligence, and conflict management.
 
