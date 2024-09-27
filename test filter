@@ -23,11 +23,11 @@ def add_one_year(date):
 
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
-
+    
     # If creation_date is empty, return the invitation status
     if not creation_date.strip():
         return "Invitar a declarar"
-
+    
     try:
         # Strip extra spaces and handle both date and datetime formats
         creation_date = creation_date.strip()
@@ -39,29 +39,214 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     except ValueError:
         # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
-
-    # Add exactly one year to the creation_date to get the next due date
-    next_due_date = add_one_year(creation_date_dt)
     
-    # Calculate the difference between today and next_due_date
-    delta = next_due_date - today
+    # Corrected: Calculate the next due date for declaration as exactly one year after creation_date
+    next_due_date = add_one_year(creation_date_dt)
+    days_to_expiry = (next_due_date - today).days
     
     # Normalize declaration_expired to lower case and strip any extra spaces
     declaration_expired = declaration_expired.strip().lower()
     
-    # If expired, mark as "Expirado"
+    # Determine the appropriate message based on days left and declaration status
     if declaration_expired == 'expired':
         return "Expirado"
-    
-    # Calculate months and days until expiration
-    if delta.days > 0:
-        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month) - (1 if today.day > next_due_date.day else 0)
-        remaining_days = (next_due_date - today.replace(month=today.month + months_to_expiry)).days
+    elif days_to_expiry > 0:
+        # Generate message based on the number of months and remaining days
+        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
+        if next_due_date.day < today.day:
+            months_to_expiry -= 1
 
-        # If no months left, show only days
+        # Calculate the remaining days after calculating full months
+        days_in_month = (next_due_date - (today + timedelta(days=30*months_to_expiry))).days
+        
         if months_to_expiry == 0:
-            return f"{delta.days} días para que expire"
+            return f"{days_to_expiry} días para que expire"
         else:
-            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''} para que expire"
+            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {days_in_month} día{'s' if days_in_month != 1 else ''} para que expire"
     else:
-        return "Expirado"
+        return "Expirado"  # In case it's exactly at the expiration or already expired
+
+def process_moocs(files, folder):
+    moocs_filter = ["ethics", "anticorruption"]
+    moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
+
+    for file in files:
+        if file.endswith('.csv'):
+            with open(file, newline='') as csv_file:
+                reader = csv.DictReader(csv_file)
+                
+                for row in reader:
+                    mooc_name = row.get('Mooc Name', '').strip().lower()
+                    name = row.get('Name', '').strip()
+                    email = row.get('Email', '').strip()
+                    entry_date = row.get('Entry Date', '').strip()
+                    job_function = row.get('Job Function', '').strip()
+                    work_location = row.get('Work Location', '').strip()
+                    business_group = row.get('Business Group', '').strip()
+                    division = row.get('Division', '').strip()
+                    bau = row.get('BAU', '').strip()
+                    completion_status = row.get('Completion Status', '').strip().lower()
+
+                    if mooc_name in moocs_filter and completion_status != "completed":
+                        moocs_data[name]['moocs_pendientes'].add(mooc_name.capitalize())
+                        moocs_data[name]['email'] = email
+                        moocs_data[name]['job_function'] = job_function
+                        moocs_data[name]['work_location'] = work_location
+                        moocs_data[name]['business_group'] = business_group
+                        moocs_data[name]['division'] = division
+                        moocs_data[name]['bau'] = bau
+                        
+                        if entry_date:
+                            moocs_data[name]['fecha'] = entry_date
+                            moocs_data[name]['fase_recordatorio'] = calculate_declaration_status_and_reminders(entry_date, "")
+
+    with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
+        writer = csv.writer(results_file)
+        writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
+        
+        for name, info in moocs_data.items():
+            moocs_pendientes = ', '.join(info['moocs_pendientes'])
+            writer.writerow([
+                name, info['email'], info['job_function'], info['work_location'],
+                info['business_group'], info['division'], info['bau'],
+                moocs_pendientes, info['fase_recordatorio']
+            ])
+
+def process_ecoi(files, folder):
+    ecoi_data = []
+    
+    for file in files:
+        if file.endswith('.csv'):
+            with open(file, newline='') as csv_file:
+                reader = csv.DictReader(csv_file)
+                
+                for row in reader:
+                    employee_name = row.get('employee_name', '').strip()
+                    employee_email = row.get('employee_email', '').strip()
+                    country = row.get('country', '').strip()
+                    region = row.get('region', '').strip()
+                    reminder_counter = row.get('reminder_counter', '').strip()
+                    last_reminder = row.get('last_reminder', '').strip()
+                    declaration_short_uid = row.get('declaration_short_uid', '').strip()
+                    declaration_full_uid = row.get('declaration_full_uid', '').strip()
+                    positive_answers = row.get('positive_answers', '').strip()
+                    declaration_status = row.get('declaration_status', '').strip()
+                    declaration_expired = row.get('declaration_expired', '').strip()
+                    latest_declaration = row.get('latest_declaration', '').strip()
+                    classification = row.get('classification', '').strip()
+                    creation_date = row.get('creation_date', '').strip()
+                    last_change_date = row.get('last_change_date', '').strip()
+                    changed_by = row.get('changed_by', '').strip()
+                    language = row.get('language', '').strip()
+                    job_function = row.get('job_function', '').strip()
+                    work_location = row.get('work_location', '').strip()
+                    bg = row.get('bg', '').strip()
+                    division = row.get('division', '').strip()
+                    bau = row.get('bau', '').strip()
+                    employee_status = row.get('employee_status', '').strip()
+
+                    # Calculate the correct status for the "Debe" column
+                    debe_status = calculate_declaration_status_and_reminders(creation_date, declaration_expired)
+
+                    # Only add rows where reminder is needed or it's a new employee without a declaration
+                    if debe_status:
+                        ecoi_data.append({
+                            'Debe': debe_status,
+                            'employee_name': employee_name,
+                            'employee_email': employee_email,
+                            'country': country,
+                            'region': region,
+                            'reminder_counter': reminder_counter,
+                            'last_reminder': last_reminder,
+                            'declaration_short_uid': declaration_short_uid,
+                            'declaration_full_uid': declaration_full_uid,
+                            'positive_answers': positive_answers,
+                            'declaration_status': declaration_status,
+                            'declaration_expired': declaration_expired,
+                            'latest_declaration': latest_declaration,
+                            'classification': classification,
+                            'creation_date': creation_date,
+                            'last_change_date': last_change_date,
+                            'changed_by': changed_by,
+                            'language': language,
+                            'job_function': job_function,
+                            'work_location': work_location,
+                            'bg': bg,
+                            'division': division,
+                            'bau': bau,
+                            'employee_status': employee_status
+                        })
+
+    with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
+        writer = csv.writer(results_file)
+        writer.writerow([
+            'Debe', 'employee_name', 'employee_email', 'country', 'region', 'reminder_counter', 'last_reminder',
+            'declaration_short_uid', 'declaration_full_uid', 'positive_answers', 'declaration_status', 
+            'declaration_expired', 'latest_declaration', 'classification', 'creation_date', 'last_change_date',
+            'changed_by', 'language', 'job_function', 'work_location', 'bg', 'division', 'bau', 'employee_status'
+        ])
+        
+        for record in ecoi_data:
+            writer.writerow([
+                record['Debe'], record['employee_name'], record['employee_email'], record['country'], record['region'],
+                record['reminder_counter'], record['last_reminder'], record['declaration_short_uid'],
+                record['declaration_full_uid'], record['positive_answers'], record['declaration_status'],
+                record['declaration_expired'], record['latest_declaration'], record['classification'], 
+                record['creation_date'], record['last_change_date'], record['changed_by'], record['language'], 
+                record['job_function'], record['work_location'], record['bg'], record['division'], 
+                record['bau'], record['employee_status']
+            ])
+
+def button_moocs_clicked():
+    search_label.config(text="Iniciando procesamiento de MOOCs...")
+    files = browse_files()
+    folder = browse_folder()
+    process_moocs(files, folder)
+    search_label.config(text='Procesamiento de MOOCs completado. Resultados guardados en moocs_resultados.csv')
+
+def button_ecoi_clicked():
+    search_label.config(text="Iniciando procesamiento de ECOI...")
+    files = browse_files()
+    folder = browse_folder()
+    process_ecoi(files, folder)
+    search_label.config(text='Procesamiento de ECOI completado. Resultados guardados en ecoi_resultados.csv')
+
+def search():
+    window = tk.Toplevel(root)
+    window.title("Opciones")
+    window.geometry('350x150')
+    window.configure(bg="#F1F1F1")
+    
+    option_label = tk.Label(window, text='Seleccione una opción:', font=('Helvetica', 14), bg="#F1F1F1", fg="#333")
+    option_label.pack(pady=10)
+    
+    button_moocs = tk.Button(window, text="Procesar MOOCs", command=button_moocs_clicked, 
+                             font=('Helvetica', 12, 'bold'), bg="#6C63FF", fg="white", 
+                             activebackground="#3B3B98", activeforeground="white", padx=10, pady=5,
+                             bd=0, relief="flat")
+    button_moocs.pack(pady=10)
+
+    button_ecoi = tk.Button(window, text="Procesar ECOI", command=button_ecoi_clicked, 
+                            font=('Helvetica', 12, 'bold'), bg="#FF6C63", fg="white", 
+                            activebackground="#983B3B", activeforeground="white", padx=10, pady=5,
+                            bd=0, relief="flat")
+    button_ecoi.pack(pady=10)
+
+root = tk.Tk()
+root.title('MOOCs y ECOI Tracking')
+root.geometry('400x300')
+root.configure(bg="#2C3E50")
+
+title_label = tk.Label(root, text="Seguimiento de MOOCs y ECOI", font=('Helvetica', 18, 'bold'), bg="#2C3E50", fg="white")
+title_label.pack(pady=20)
+
+search_label = tk.Label(root, text='', bg="#2C3E50", fg="white")
+search_label.pack()
+
+search_button = tk.Button(root, text='Iniciar procesamiento', command=search, 
+                          font=('Helvetica', 14), bg="#3498DB", fg="white", 
+                          activebackground="#2980B9", activeforeground="white", padx=10, pady=10,
+                          bd=0, relief="flat")
+search_button.pack(pady=20)
+
+root.mainloop()
