@@ -3,7 +3,7 @@ import csv
 import tkinter as tk
 from tkinter import filedialog
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def browse_files():
     files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
@@ -13,93 +13,28 @@ def browse_folder():
     folder = filedialog.askdirectory()
     return folder
 
-def calcular_fase_recordatorio(fecha_entrada):
+def calcular_estado_declaracion(creation_date):
     hoy = datetime.today()
     
     try:
-        fecha_entrada_dt = datetime.strptime(fecha_entrada, "%d/%m/%Y")
+        creation_dt = datetime.strptime(creation_date, "%d/%m/%Y")
     except ValueError:
-        print(f"Error en el formato de fecha: {fecha_entrada}")
+        print(f"Error en el formato de fecha: {creation_date}")
         return "Fecha inválida"
-
-    dias_desde_entrada = (hoy - fecha_entrada_dt).days
     
-    if dias_desde_entrada <= 7:
-        return f"Primera fase: Invitación (primeros 7 días) ({dias_desde_entrada} días desde la entrada)"
-    elif dias_desde_entrada > 7 and dias_desde_entrada < 30:
-        dias_desde_ultimo_recordatorio = dias_desde_entrada - 7
-        return f"Segunda fase: Reminder antes de que se acabe el mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
-    elif dias_desde_entrada >= 30 and dias_desde_entrada < 53:
-        dias_desde_ultimo_recordatorio = dias_desde_entrada - 30
-        return f"Tercera fase: Se acabó el mes, recordar ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
-    elif dias_desde_entrada >= 53 and dias_desde_entrada < 60:
-        dias_desde_ultimo_recordatorio = dias_desde_entrada - 53
-        return f"Cuarta fase: Reminder antes de que se acabe el segundo mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
-    elif dias_desde_entrada >= 60 and dias_desde_entrada < 83:
-        dias_desde_ultimo_recordatorio = dias_desde_entrada - 60
-        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    # Calculate days since declaration creation
+    dias_desde_creacion = (hoy - creation_dt).days
+    
+    # Determine if the declaration is about to expire or has expired
+    if dias_desde_creacion >= 335 and dias_desde_creacion < 365:  # Within 1 month to expire (30 days)
+        return "Expira en 1 mes"
+    elif dias_desde_creacion >= 365:  # Expired
+        return "Expirado (Recordar)"
     else:
-        dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
-        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
-
-def process_moocs(files, folder):
-    moocs_filter = ["ethics", "anticorruption"]  # Ensure case-insensitive comparison
-    
-    moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
-
-    for file in files:
-        if file.endswith('.csv'):
-            with open(file, newline='') as csv_file:
-                reader = csv.DictReader(csv_file)
-                
-                for row in reader:
-                    # Extract necessary data and normalize text
-                    mooc_name = row.get('Mooc Name', '').strip().lower()
-                    name = row.get('Name', '').strip()
-                    email = row.get('Email', '').strip()
-                    entry_date = row.get('Entry Date', '').strip()
-                    job_function = row.get('Job Function', '').strip()
-                    work_location = row.get('Work Location', '').strip()
-                    business_group = row.get('Business Group', '').strip()
-                    division = row.get('Division', '').strip()
-                    bau = row.get('BAU', '').strip()
-                    completion_status = row.get('Completion Status', '').strip().lower()
-
-                    # Debug print statements
-                    print(f"Processing row - Name: {name}, Mooc Name: {mooc_name}, Completion Status: {completion_status}")
-
-                    # Check if the course is in the filtered list and is not completed
-                    if mooc_name in moocs_filter and completion_status != "completed":
-                        # Add unique pending MOOCs
-                        moocs_data[name]['moocs_pendientes'].add(mooc_name.capitalize())  # Capitalize to display correctly
-                        moocs_data[name]['email'] = email
-                        moocs_data[name]['job_function'] = job_function
-                        moocs_data[name]['work_location'] = work_location
-                        moocs_data[name]['business_group'] = business_group
-                        moocs_data[name]['division'] = division
-                        moocs_data[name]['bau'] = bau
-                        
-                        # Calculate reminder phase based on entry date
-                        if entry_date:
-                            moocs_data[name]['fecha'] = entry_date
-                            moocs_data[name]['fase_recordatorio'] = calcular_fase_recordatorio(entry_date)
-
-    # Save results to CSV
-    with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
-        writer = csv.writer(results_file)
-        writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
-        
-        # Write filtered and processed results
-        for name, info in moocs_data.items():
-            moocs_pendientes = ', '.join(info['moocs_pendientes'])
-            writer.writerow([
-                name, info['email'], info['job_function'], info['work_location'],
-                info['business_group'], info['division'], info['bau'],
-                moocs_pendientes, info['fase_recordatorio']
-            ])
+        return ""  # Not relevant for reminders
 
 def process_ecoi(files, folder):
-    ecoi_data = defaultdict(lambda: {'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'fase_recordatorio': '', 'declaration_status': '', 'creation_date': ''})
+    ecoi_data = []
 
     for file in files:
         if file.endswith('.csv'):
@@ -107,38 +42,85 @@ def process_ecoi(files, folder):
                 reader = csv.DictReader(csv_file)
                 
                 for row in reader:
-                    name = row.get('Name', row.get('employee_name', ''))
-                    email = row.get('Email', row.get('employee_email', ''))
-                    job_function = row.get('Job Function', '')
-                    work_location = row.get('Work Location', '')
-                    business_group = row.get('Business Group', row.get('bg', ''))
-                    entry_date = row.get('Entry Date', '')
-                    declaration_status = row.get('declaration_status', '')
-                    creation_date = row.get('creation_date', '')
+                    # Extract necessary data
+                    employee_name = row.get('employee_name', '').strip()
+                    employee_email = row.get('employee_email', '').strip()
+                    country = row.get('country', '').strip()
+                    region = row.get('region', '').strip()
+                    reminder_counter = row.get('reminder_counter', '').strip()
+                    last_reminder = row.get('last_reminder', '').strip()
+                    declaration_short_uid = row.get('declaration_short_uid', '').strip()
+                    declaration_full_uid = row.get('declaration_full_uid', '').strip()
+                    positive_answers = row.get('positive_answers', '').strip()
+                    declaration_status = row.get('declaration_status', '').strip()
+                    declaration_expired = row.get('declaration_expired', '').strip()
+                    latest_declaration = row.get('latest_declaration', '').strip()
+                    classification = row.get('classification', '').strip()
+                    creation_date = row.get('creation_date', '').strip()
+                    last_change_date = row.get('last_change_date', '').strip()
+                    changed_by = row.get('changed_by', '').strip()
+                    language = row.get('language', '').strip()
+                    job_function = row.get('job_function', '').strip()
+                    work_location = row.get('work_location', '').strip()
+                    bg = row.get('bg', '').strip()
+                    division = row.get('division', '').strip()
+                    bau = row.get('bau', '').strip()
+                    employee_status = row.get('employee_status', '').strip()
                     
-                    if not name:
-                        continue
-
-                    ecoi_data[name]['email'] = email
-                    ecoi_data[name]['job_function'] = job_function
-                    ecoi_data[name]['work_location'] = work_location
-                    ecoi_data[name]['business_group'] = business_group
-                    ecoi_data[name]['declaration_status'] = declaration_status
-                    ecoi_data[name]['creation_date'] = creation_date
+                    # Calculate "Debe" status
+                    debe_status = calcular_estado_declaracion(creation_date)
                     
-                    if entry_date:
-                        ecoi_data[name]['fecha'] = entry_date
-                        ecoi_data[name]['fase_recordatorio'] = calcular_fase_recordatorio(entry_date)
+                    # Only add rows that are either expiring soon or already expired
+                    if debe_status:
+                        ecoi_data.append({
+                            'Debe': debe_status,
+                            'employee_name': employee_name,
+                            'employee_email': employee_email,
+                            'country': country,
+                            'region': region,
+                            'reminder_counter': reminder_counter,
+                            'last_reminder': last_reminder,
+                            'declaration_short_uid': declaration_short_uid,
+                            'declaration_full_uid': declaration_full_uid,
+                            'positive_answers': positive_answers,
+                            'declaration_status': declaration_status,
+                            'declaration_expired': declaration_expired,
+                            'latest_declaration': latest_declaration,
+                            'classification': classification,
+                            'creation_date': creation_date,
+                            'last_change_date': last_change_date,
+                            'changed_by': changed_by,
+                            'language': language,
+                            'job_function': job_function,
+                            'work_location': work_location,
+                            'bg': bg,
+                            'division': division,
+                            'bau': bau,
+                            'employee_status': employee_status
+                        })
 
+    # Save results to CSV
     with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
-        writer.writerow(['Name', 'Email', 'Fecha de Entrada', 'Job Function', 'Work Location', 'Business Group', 'Fase de Recordatorio', 'Declaration Status', 'Creation Date'])
+        # Write header
+        writer.writerow([
+            'Debe', 'employee_name', 'employee_email', 'country', 'region', 'reminder_counter', 
+            'last_reminder', 'declaration_short_uid', 'declaration_full_uid', 'positive_answers', 
+            'declaration_status', 'declaration_expired', 'latest_declaration', 'classification', 
+            'creation_date', 'last_change_date', 'changed_by', 'language', 'job_function', 
+            'work_location', 'bg', 'division', 'bau', 'employee_status'
+        ])
         
-        for name, info in ecoi_data.items():
+        # Write filtered rows
+        for entry in ecoi_data:
             writer.writerow([
-                name, info['email'], info['fecha'], info['job_function'],
-                info['work_location'], info['business_group'], info['fase_recordatorio'],
-                info['declaration_status'], info['creation_date']
+                entry['Debe'], entry['employee_name'], entry['employee_email'], entry['country'], 
+                entry['region'], entry['reminder_counter'], entry['last_reminder'], 
+                entry['declaration_short_uid'], entry['declaration_full_uid'], entry['positive_answers'], 
+                entry['declaration_status'], entry['declaration_expired'], entry['latest_declaration'], 
+                entry['classification'], entry['creation_date'], entry['last_change_date'], 
+                entry['changed_by'], entry['language'], entry['job_function'], entry['work_location'], 
+                entry['bg'], entry['division'], entry['bau'], entry['employee_status']
             ])
 
 def button_moocs_clicked():
@@ -196,9 +178,3 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
-
-
-
-
-employee_name	employee_email	country	region	reminder_counter	last_reminder	declaration_short_uid	declaration_full_uid	positive_answers	declaration_status	declaration_expired	latest_declaration	classification	creation_date	last_change_date	changed_by	language	job_function	work_location	bg	division	bau	employee_status
-
