@@ -188,7 +188,175 @@ search_button.bind("<Leave>", on_leave_search)
 root.mainloop()
 
 
+----------------------------------------------------------------
+import os
+import csv
+import tkinter as tk
+from tkinter import filedialog
+from collections import defaultdict
+from datetime import datetime, timedelta
 
------//////
+def browse_files():
+    files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
+    return list(files)
+
+def browse_folder():
+    folder = filedialog.askdirectory()
+    return folder
+
+def calcular_fase_recordatorio(fecha_entrada):
+    hoy = datetime.today()
+    
+    try:
+        fecha_entrada_dt = datetime.strptime(fecha_entrada, "%d/%m/%Y")
+    except ValueError:
+        print(f"Error en el formato de fecha: {fecha_entrada}")
+        return "Fecha inválida"
+
+    dias_desde_entrada = (hoy - fecha_entrada_dt).days
+    
+    if dias_desde_entrada <= 7:
+        return f"Primera fase: Invitación (primeros 7 días) ({dias_desde_entrada} días desde la entrada)"
+    elif dias_desde_entrada > 7 and dias_desde_entrada < 30:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 7
+        return f"Segunda fase: Reminder antes de que se acabe el mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 30 and dias_desde_entrada < 53:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 30
+        return f"Tercera fase: Se acabó el mes, recordar ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 53 and dias_desde_entrada < 60:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 53
+        return f"Cuarta fase: Reminder antes de que se acabe el segundo mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 60 and dias_desde_entrada < 83:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 60
+        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    else:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
+        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+
+def search_csv(files, folder):
+    pendientes = defaultdict(lambda: {'cursos': [], 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'fase_recordatorio': '', 'declaration_status': '', 'declaration_expired': '', 'creation_date': ''})
+    
+    for file in files:
+        if file.endswith('.csv'):
+            with open(file, newline='') as csv_file:
+                reader = csv.DictReader(csv_file)
+                curso_name = os.path.basename(file).replace('.csv', '')
+                
+                for row in reader:
+                    if row.get('Completion Status', row.get('declaration_status', '')).lower() in ['not completed', 'open']:
+                        empleado = row.get('Name', row.get('employee_name', ''))
+                        
+                        if not empleado:
+                            print(f"Advertencia: Nombre no encontrado para el archivo {file}.")
+                            continue
+
+                        fecha_entrada = row.get('Entry Date', '')
+                        email = row.get('Email', row.get('employee_email', ''))
+                        job_function = row.get('Job Function', row.get('job_function', ''))
+                        work_location = row.get('Work Location', row.get('work_location', ''))
+                        business_group = row.get('Business Group', row.get('bg', ''))
+
+                        declaration_status = row.get('declaration_status', '')
+                        declaration_expired = row.get('declaration_expired', '')
+                        
+                        # Capture the creation date for ECOI
+                        creation_date = row.get('creation_date', '')
+
+                        if pendientes[empleado]['fecha'] == '':
+                            pendientes[empleado]['fecha'] = fecha_entrada
+                        
+                        if pendientes[empleado]['email'] == '':
+                            pendientes[empleado]['email'] = email
+                        
+                        if pendientes[empleado]['job_function'] == '':
+                            pendientes[empleado]['job_function'] = job_function
+                        
+                        if pendientes[empleado]['work_location'] == '':
+                            pendientes[empleado]['work_location'] = work_location
+                        
+                        if pendientes[empleado]['business_group'] == '':
+                            pendientes[empleado]['business_group'] = business_group
+                        
+                        if declaration_status:
+                            pendientes[empleado]['declaration_status'] = declaration_status
+                        if declaration_expired.lower() == 'expired':
+                            pendientes[empleado]['declaration_expired'] = 'expired'
+                        
+                        # Save the creation date if it exists
+                        if creation_date:
+                            pendientes[empleado]['creation_date'] = creation_date
+
+                        if fecha_entrada:
+                            pendientes[empleado]['fase_recordatorio'] = calcular_fase_recordatorio(fecha_entrada)
+
+                        pendientes[empleado]['cursos'].append(curso_name)
+
+    with open(os.path.join(folder, 'resultados.csv'), 'w', newline='') as results_file:
+        writer = csv.writer(results_file)
+        writer.writerow(['Empleado', 'Email', 'Fecha de Entrada', 'Job Function', 'Work Location', 'Business Group', 'Cursos pendientes', 'Fase de Recordatorio', 'Declaration Status', 'Declaration Expired', 'Creation Date'])
+        
+        for empleado, info in pendientes.items():
+            writer.writerow([empleado, info['email'], info['fecha'], info['job_function'], info['work_location'], info['business_group'], ', '.join(info['cursos']), info['fase_recordatorio'], info['declaration_status'], info['declaration_expired'], info['creation_date']])
+
+def button1_clicked():
+    search_label.config(text="Iniciando búsqueda de pendientes...")
+    files = browse_files()
+    folder = browse_folder()
+    search_csv(files, folder)
+    search_label.config(text='Búsqueda completada. Resultados guardados en resultados.csv')
+
+def search():
+    window = tk.Toplevel(root)
+    window.title("Opciones")
+    window.geometry('350x150')
+    window.configure(bg="#F1F1F1")
+    
+    option_label = tk.Label(window, text='Búsqueda de pendientes:', font=('Helvetica', 14), bg="#F1F1F1", fg="#333")
+    option_label.pack(pady=10)
+    
+    button1 = tk.Button(window, text="Iniciar búsqueda", command=button1_clicked, 
+                        font=('Helvetica', 12, 'bold'), bg="#6C63FF", fg="white", 
+                        activebackground="#3B3B98", activeforeground="white", padx=10, pady=5,
+                        bd=0, relief="flat")
+    button1.pack(pady=10)
+
+    def on_enter(e):
+        button1.config(bg='#5A55FF')
+
+    def on_leave(e):
+        button1.config(bg='#6C63FF')
+
+    button1.bind("<Enter>", on_enter)
+    button1.bind("<Leave>", on_leave)
+
+root = tk.Tk()
+root.title('MOOCs y ECOI Tracking')
+root.geometry('400x300')
+root.configure(bg="#2C3E50")
+
+title_label = tk.Label(root, text="Seguimiento de MOOCs y ECOI", font=('Helvetica', 18, 'bold'), bg="#2C3E50", fg="white")
+title_label.pack(pady=20)
+
+search_label = tk.Label(root, text='', bg="#2C3E50", fg="white")
+search_label.pack()
+
+search_button = tk.Button(root, text='Buscar pendientes', command=search, 
+                          font=('Helvetica', 14), bg="#3498DB", fg="white", 
+                          activebackground="#2980B9", activeforeground="white", padx=10, pady=10,
+                          bd=0, relief="flat")
+search_button.pack(pady=20)
+
+def on_enter_search(e):
+    search_button.config(bg='#58A6FF')
+
+def on_leave_search(e):
+    search_button.config(bg='#3498DB')
+
+search_button.bind("<Enter>", on_enter_search)
+search_button.bind("<Leave>", on_leave_search)
+
+root.mainloop()
+
+----------------------------------------------------------------
 
 
