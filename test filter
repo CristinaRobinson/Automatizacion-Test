@@ -196,3 +196,9 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
+
+
+
+
+employee_name	employee_email	country	region	reminder_counter	last_reminder	declaration_short_uid	declaration_full_uid	positive_answers	declaration_status	declaration_expired	latest_declaration	classification	creation_date	last_change_date	changed_by	language	job_function	work_location	bg	division	bau	employee_status
+
