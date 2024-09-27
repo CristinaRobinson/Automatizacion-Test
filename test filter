@@ -232,6 +232,19 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
                           font=('Helvetica', 14), bg="#3498DB", fg="white", 
                           activebackground="#2980B9", activeforeground="white", padx=10, pady=10,
                           bd=0, relief="flat")
+
+Exception in Tkinter callback
+Traceback (most recent call last):
+  File "C:\Users\1vargacr\AppData\Local\Programs\Python\Python312\Lib\tkinter\__init__.py", line 1968, in __call__
+    return self.func(*args)
+           ^^^^^^^^^^^^^^^^
+  File "c:\Users\1vargacr\Desktop\ECOI & MOOCS\test.py", line 196, in button_ecoi_clicked
+    process_ecoi(files, folder)
+  File "c:\Users\1vargacr\Desktop\ECOI & MOOCS\test.py", line 165, in process_ecoi
+    with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: 'C:/Users/1vargacr/Desktop/ECOI & MOOCS\\ecoi_resultados.csv'
+
 search_button.pack(pady=20)
 
 root.mainloop()
