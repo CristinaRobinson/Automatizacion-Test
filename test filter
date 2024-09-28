@@ -21,58 +21,76 @@ def add_one_year(date):
         # Handle leap year edge case (e.g., Feb 29 to Feb 28)
         return date.replace(year=date.year + 1, day=28)
 
+# Calculate phases for MOOCs as per original logic
+def calculate_fase_recordatorio(fecha_entrada):
+    hoy = datetime.today()
+    
+    try:
+        fecha_entrada_dt = datetime.strptime(fecha_entrada, "%d/%m/%Y")
+    except ValueError:
+        print(f"Error en el formato de fecha: {fecha_entrada}")
+        return "Fecha inválida"
+
+    dias_desde_entrada = (hoy - fecha_entrada_dt).days
+    
+    if dias_desde_entrada <= 7:
+        return f"Primera fase: Invitación (primeros 7 días) ({dias_desde_entrada} días desde la entrada)"
+    elif dias_desde_entrada > 7 and dias_desde_entrada < 30:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 7
+        return f"Segunda fase: Reminder antes de que se acabe el mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 30 and dias_desde_entrada < 53:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 30
+        return f"Tercera fase: Se acabó el mes, recordar ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 53 and dias_desde_entrada < 60:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 53
+        return f"Cuarta fase: Reminder antes de que se acabe el segundo mes ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    elif dias_desde_entrada >= 60 and dias_desde_entrada < 83:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 60
+        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+    else:
+        dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
+        return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
+
+# Calculate declaration status for ECOI as per the new refined logic
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
     
-    # If creation_date is empty, return the invitation status
     if not creation_date.strip():
         return "Invitar a declarar"
     
     try:
-        # Strip extra spaces and handle both date and datetime formats
         creation_date = creation_date.strip()
-        # Parse with time if provided, otherwise parse just the date
         if " " in creation_date:
             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
         else:
             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
     except ValueError:
-        # If there's a problem parsing the date, treat as needing an invitation
         return "Invitar a declarar"
     
-    # Calculate the next due date for declaration as exactly one year after creation_date
     next_due_date = add_one_year(creation_date_dt)
     days_to_expiry = (next_due_date - today).days
     
-    # Normalize declaration_expired to lower case and strip any extra spaces
     declaration_expired = declaration_expired.strip().lower()
     
-    # Determine the appropriate message based on days left and declaration status
     if declaration_expired == 'expired':
         return "Expirado"
     elif days_to_expiry > 0:
-        # Calculate the exact number of months to expiry
         months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
-        
-        # If the day of the next_due_date is earlier than today's day, subtract one month
         if next_due_date.day < today.day:
             months_to_expiry -= 1
             
-        # Calculate the start of the month after accounting for months
         start_of_expiry_month = today + timedelta(days=30*months_to_expiry)
         remaining_days = (next_due_date - start_of_expiry_month).days
 
-        # Ensure remaining_days is within the correct range
         if remaining_days < 0:
             remaining_days = (next_due_date - (start_of_expiry_month - timedelta(days=30))).days
         
-        # Format the output correctly
         if months_to_expiry == 0:
             return f"{days_to_expiry} días para que expire"
         else:
             return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''} para que expire"
     else:
-        return "Expirado"  # In case it's exactly at the expiration or already expired
+        return "Expirado"
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
@@ -106,7 +124,7 @@ def process_moocs(files, folder):
                         
                         if entry_date:
                             moocs_data[name]['fecha'] = entry_date
-                            moocs_data[name]['fase_recordatorio'] = calculate_declaration_status_and_reminders(entry_date, "")
+                            moocs_data[name]['fase_recordatorio'] = calculate_fase_recordatorio(entry_date)
 
     with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
