@@ -15,10 +15,13 @@ def browse_folder():
 
 def add_one_year(date):
     try:
+        # Try to add one year to the date
         return date.replace(year=date.year + 1)
     except ValueError:
+        # Handle leap year edge case (e.g., Feb 29 to Feb 28)
         return date.replace(year=date.year + 1, day=28)
 
+# Calculate phases for MOOCs as per original logic
 def calculate_fase_recordatorio(fecha_entrada):
     hoy = datetime.today()
     
@@ -48,6 +51,7 @@ def calculate_fase_recordatorio(fecha_entrada):
         dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
+# Calculate declaration status for ECOI as per the new refined logic
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
     
@@ -75,7 +79,7 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         if next_due_date.day < today.day:
             months_to_expiry -= 1
             
-        start_of_expiry_month = today + timedelta(days=30 * months_to_expiry)
+        start_of_expiry_month = today + timedelta(days=30*months_to_expiry)
         remaining_days = (next_due_date - start_of_expiry_month).days
 
         if remaining_days < 0:
@@ -143,6 +147,21 @@ def process_ecoi(files, folder):
                 reader = csv.DictReader(csv_file)
                 
                 for row in reader:
+                    creation_date = row.get('creation_date', '').strip()
+                    
+                    # Filter only declarations made in 2023
+                    try:
+                        if " " in creation_date:
+                            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
+                        else:
+                            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+                    except ValueError:
+                        continue
+                    
+                    # Skip entries that are not from 2023
+                    if creation_date_dt.year != 2023:
+                        continue
+                    
                     employee_name = row.get('employee_name', '').strip()
                     employee_email = row.get('employee_email', '').strip()
                     country = row.get('country', '').strip()
@@ -156,7 +175,6 @@ def process_ecoi(files, folder):
                     declaration_expired = row.get('declaration_expired', '').strip()
                     latest_declaration = row.get('latest_declaration', '').strip()
                     classification = row.get('classification', '').strip()
-                    creation_date = row.get('creation_date', '').strip()
                     last_change_date = row.get('last_change_date', '').strip()
                     changed_by = row.get('changed_by', '').strip()
                     language = row.get('language', '').strip()
@@ -167,37 +185,37 @@ def process_ecoi(files, folder):
                     bau = row.get('bau', '').strip()
                     employee_status = row.get('employee_status', '').strip()
 
-                    # Filter only those with a creation date in 2023
-                    if creation_date.startswith('2023'):
-                        debe_status = calculate_declaration_status_and_reminders(creation_date, declaration_expired)
+                    # Calculate the correct status for the "Debe" column
+                    debe_status = calculate_declaration_status_and_reminders(creation_date, declaration_expired)
 
-                        if debe_status:
-                            ecoi_data.append({
-                                'Debe': debe_status,
-                                'employee_name': employee_name,
-                                'employee_email': employee_email,
-                                'country': country,
-                                'region': region,
-                                'reminder_counter': reminder_counter,
-                                'last_reminder': last_reminder,
-                                'declaration_short_uid': declaration_short_uid,
-                                'declaration_full_uid': declaration_full_uid,
-                                'positive_answers': positive_answers,
-                                'declaration_status': declaration_status,
-                                'declaration_expired': declaration_expired,
-                                'latest_declaration': latest_declaration,
-                                'classification': classification,
-                                'creation_date': creation_date,
-                                'last_change_date': last_change_date,
-                                'changed_by': changed_by,
-                                'language': language,
-                                'job_function': job_function,
-                                'work_location': work_location,
-                                'bg': bg,
-                                'division': division,
-                                'bau': bau,
-                                'employee_status': employee_status
-                            })
+                    # Only add rows where reminder is needed or it's a new employee without a declaration
+                    if debe_status:
+                        ecoi_data.append({
+                            'Debe': debe_status,
+                            'employee_name': employee_name,
+                            'employee_email': employee_email,
+                            'country': country,
+                            'region': region,
+                            'reminder_counter': reminder_counter,
+                            'last_reminder': last_reminder,
+                            'declaration_short_uid': declaration_short_uid,
+                            'declaration_full_uid': declaration_full_uid,
+                            'positive_answers': positive_answers,
+                            'declaration_status': declaration_status,
+                            'declaration_expired': declaration_expired,
+                            'latest_declaration': latest_declaration,
+                            'classification': classification,
+                            'creation_date': creation_date,
+                            'last_change_date': last_change_date,
+                            'changed_by': changed_by,
+                            'language': language,
+                            'job_function': job_function,
+                            'work_location': work_location,
+                            'bg': bg,
+                            'division': division,
+                            'bau': bau,
+                            'employee_status': employee_status
+                        })
 
     with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
