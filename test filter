@@ -282,3 +282,8 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
+
+
+--------
+Name	Email	Country 	Region 	Job Function	Work Location	Business Group	Division	BAU	"
+Entry date in the system"	STATUS 04/09 ECOI	STATUS 04/09ETHICS	STATUS 04/09 ANTI
