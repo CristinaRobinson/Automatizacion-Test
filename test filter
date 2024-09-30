@@ -47,7 +47,6 @@ def calculate_fase_recordatorio(fecha_entrada):
         dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
-# Calculate declaration status for ECOI
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
     
