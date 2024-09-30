@@ -15,20 +15,16 @@ def browse_folder():
 
 def add_one_year(date):
     try:
-        # Try to add one year to the date
         return date.replace(year=date.year + 1)
     except ValueError:
-        # Handle leap year edge case (e.g., Feb 29 to Feb 28)
         return date.replace(year=date.year + 1, day=28)
 
-# Calculate phases for MOOCs as per original logic
 def calculate_fase_recordatorio(fecha_entrada):
     hoy = datetime.today()
     
     try:
         fecha_entrada_dt = datetime.strptime(fecha_entrada, "%d/%m/%Y")
     except ValueError:
-        print(f"Error en el formato de fecha: {fecha_entrada}")
         return "Fecha inválida"
 
     dias_desde_entrada = (hoy - fecha_entrada_dt).days
@@ -51,7 +47,7 @@ def calculate_fase_recordatorio(fecha_entrada):
         dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
-# Calculate declaration status for ECOI with correct reminders and expiry details
+# Calculate declaration status for ECOI
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
     
@@ -59,11 +55,10 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
         return "Invitar a declarar"
     
     try:
-        creation_date = creation_date.strip()
         if " " in creation_date:
-            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
+            creation_date_dt = datetime.strptime(creation_date.strip(), "%d/%m/%Y %H:%M")
         else:
-            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+            creation_date_dt = datetime.strptime(creation_date.strip(), "%d/%m/%Y")
     except ValueError:
         return "Invitar a declarar"
     
@@ -74,22 +69,17 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     if days_to_expiry < 0:
         return "Expirado"
     
-    # Calculate months and days to expiry
+    # If within 1 month (0-30 days), mark as needing a reminder
+    if 0 <= days_to_expiry <= 30:
+        return "Mandar reminder"
+    
+    # Calculate remaining months and days for declarations not expiring soon
     months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
     if next_due_date.day < today.day:
         months_to_expiry -= 1
 
-    start_of_expiry_month = today + timedelta(days=30 * months_to_expiry)
-    remaining_days = (next_due_date - start_of_expiry_month).days
-
-    if remaining_days < 0:
-        remaining_days = (next_due_date - (start_of_expiry_month - timedelta(days=30))).days
-
-    # If within 1 month, mark as needing a reminder
-    if days_to_expiry <= 30:
-        return "Mandar reminder"
+    remaining_days = (next_due_date - (today + timedelta(days=30 * months_to_expiry))).days
     
-    # If not expired, show time remaining
     return f"Expira en {months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''}"
 
 def process_moocs(files, folder):
@@ -151,7 +141,7 @@ def process_ecoi(files, folder):
                     declaration_status = row.get('declaration_status', '').strip().lower()
                     declaration_expired = row.get('declaration_expired', '').strip().lower()
                     
-                    # Always include rows with no creation_date (new employees)
+                    # Include rows with no creation_date as new employees
                     if not creation_date:
                         ecoi_data.append({
                             'Debe': "Invitar a declarar",
@@ -179,7 +169,7 @@ def process_ecoi(files, folder):
                             'bau': row.get('bau', '').strip(),
                             'employee_status': row.get('employee_status', '').strip()
                         })
-                        continue  # Move to the next row
+                        continue
                     
                     # For rows with a creation_date, process based on year and status
                     include_row = False
