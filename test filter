@@ -78,7 +78,7 @@ def calculate_declaration_status_and_reminders(creation_date):
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
-    moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
+    moocs_data = defaultdict(lambda: {'moocs_pendientes': set(), 'fecha': '', 'entry_date': '', 'email': '', 'job_function': '', 'work_location': '', 'business_group': '', 'division': '', 'bau': '', 'fase_recordatorio': ''})
 
     for file in files:
         if file.endswith('.csv'):
@@ -100,6 +100,7 @@ def process_moocs(files, folder):
                     if mooc_name in moocs_filter and completion_status != "completed":
                         moocs_data[name]['moocs_pendientes'].add(mooc_name.capitalize())
                         moocs_data[name]['email'] = email
+                        moocs_data[name]['entry_date'] = entry_date  # Capture the entry_date
                         moocs_data[name]['job_function'] = job_function
                         moocs_data[name]['work_location'] = work_location
                         moocs_data[name]['business_group'] = business_group
@@ -112,12 +113,12 @@ def process_moocs(files, folder):
 
     with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
-        writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
+        writer.writerow(['Name', 'Email', 'Entry Date', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
         
         for name, info in moocs_data.items():
             moocs_pendientes = ', '.join(info['moocs_pendientes'])
             writer.writerow([
-                name, info['email'], info['job_function'], info['work_location'],
+                name, info['email'], info['entry_date'], info['job_function'], info['work_location'],
                 info['business_group'], info['division'], info['bau'],
                 moocs_pendientes, info['fase_recordatorio']
             ])
