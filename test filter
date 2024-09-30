@@ -151,75 +151,77 @@ def process_ecoi(files, folder):
                     declaration_status = row.get('declaration_status', '').strip().lower()
                     declaration_expired = row.get('declaration_expired', '').strip().lower()
                     
-                    # If no creation_date, include as a new employee
+                    # Always include rows with no creation_date (new employees)
                     if not creation_date:
-                        include_row = True
-                    else:
-                        include_row = False
-                        # Parse creation_date
-                        try:
-                            if " " in creation_date:
-                                creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
-                            else:
-                                creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
-                        except ValueError:
-                            continue
-                        
-                        # Check if creation_date is in 2023
-                        if creation_date_dt.year == 2023:
-                            include_row = True
-                    
-                    # Include rows that are either new or match status conditions
-                    if include_row or (declaration_status == 'closed' and declaration_expired in ['expired', 'about to expire']):
-                        employee_name = row.get('employee_name', '').strip()
-                        employee_email = row.get('employee_email', '').strip()
-                        country = row.get('country', '').strip()
-                        region = row.get('region', '').strip()
-                        reminder_counter = row.get('reminder_counter', '').strip()
-                        last_reminder = row.get('last_reminder', '').strip()
-                        declaration_short_uid = row.get('declaration_short_uid', '').strip()
-                        declaration_full_uid = row.get('declaration_full_uid', '').strip()
-                        positive_answers = row.get('positive_answers', '').strip()
-                        latest_declaration = row.get('latest_declaration', '').strip()
-                        classification = row.get('classification', '').strip()
-                        last_change_date = row.get('last_change_date', '').strip()
-                        changed_by = row.get('changed_by', '').strip()
-                        language = row.get('language', '').strip()
-                        job_function = row.get('job_function', '').strip()
-                        work_location = row.get('work_location', '').strip()
-                        bg = row.get('bg', '').strip()
-                        division = row.get('division', '').strip()
-                        bau = row.get('bau', '').strip()
-                        employee_status = row.get('employee_status', '').strip()
-
-                        # Calculate the correct status for the "Debe" column
-                        debe_status = calculate_declaration_status_and_reminders(creation_date, declaration_expired)
-
                         ecoi_data.append({
-                            'Debe': debe_status,
-                            'employee_name': employee_name,
-                            'employee_email': employee_email,
-                            'country': country,
-                            'region': region,
-                            'reminder_counter': reminder_counter,
-                            'last_reminder': last_reminder,
-                            'declaration_short_uid': declaration_short_uid,
-                            'declaration_full_uid': declaration_full_uid,
-                            'positive_answers': positive_answers,
+                            'Debe': "Invitar a declarar",
+                            'employee_name': row.get('employee_name', '').strip(),
+                            'employee_email': row.get('employee_email', '').strip(),
+                            'country': row.get('country', '').strip(),
+                            'region': row.get('region', '').strip(),
+                            'reminder_counter': row.get('reminder_counter', '').strip(),
+                            'last_reminder': row.get('last_reminder', '').strip(),
+                            'declaration_short_uid': row.get('declaration_short_uid', '').strip(),
+                            'declaration_full_uid': row.get('declaration_full_uid', '').strip(),
+                            'positive_answers': row.get('positive_answers', '').strip(),
                             'declaration_status': declaration_status,
                             'declaration_expired': declaration_expired,
-                            'latest_declaration': latest_declaration,
-                            'classification': classification,
+                            'latest_declaration': row.get('latest_declaration', '').strip(),
+                            'classification': row.get('classification', '').strip(),
                             'creation_date': creation_date,
-                            'last_change_date': last_change_date,
-                            'changed_by': changed_by,
-                            'language': language,
-                            'job_function': job_function,
-                            'work_location': work_location,
-                            'bg': bg,
-                            'division': division,
-                            'bau': bau,
-                            'employee_status': employee_status
+                            'last_change_date': row.get('last_change_date', '').strip(),
+                            'changed_by': row.get('changed_by', '').strip(),
+                            'language': row.get('language', '').strip(),
+                            'job_function': row.get('job_function', '').strip(),
+                            'work_location': row.get('work_location', '').strip(),
+                            'bg': row.get('bg', '').strip(),
+                            'division': row.get('division', '').strip(),
+                            'bau': row.get('bau', '').strip(),
+                            'employee_status': row.get('employee_status', '').strip()
+                        })
+                        continue  # Move to the next row
+                    
+                    # For rows with a creation_date, process based on year and status
+                    include_row = False
+                    try:
+                        if " " in creation_date:
+                            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
+                        else:
+                            creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
+                    except ValueError:
+                        continue
+                    
+                    # Check if creation_date is in 2023
+                    if creation_date_dt.year == 2023:
+                        include_row = True
+                    
+                    # Include rows that match status conditions
+                    if include_row and declaration_status == 'closed' and declaration_expired in ['expired', 'about to expire']:
+                        ecoi_data.append({
+                            'Debe': calculate_declaration_status_and_reminders(creation_date, declaration_expired),
+                            'employee_name': row.get('employee_name', '').strip(),
+                            'employee_email': row.get('employee_email', '').strip(),
+                            'country': row.get('country', '').strip(),
+                            'region': row.get('region', '').strip(),
+                            'reminder_counter': row.get('reminder_counter', '').strip(),
+                            'last_reminder': row.get('last_reminder', '').strip(),
+                            'declaration_short_uid': row.get('declaration_short_uid', '').strip(),
+                            'declaration_full_uid': row.get('declaration_full_uid', '').strip(),
+                            'positive_answers': row.get('positive_answers', '').strip(),
+                            'declaration_status': declaration_status,
+                            'declaration_expired': declaration_expired,
+                            'latest_declaration': row.get('latest_declaration', '').strip(),
+                            'classification': row.get('classification', '').strip(),
+                            'creation_date': creation_date,
+                            'last_change_date': row.get('last_change_date', '').strip(),
+                            'changed_by': row.get('changed_by', '').strip(),
+                            'language': row.get('language', '').strip(),
+                            'job_function': row.get('job_function', '').strip(),
+                            'work_location': row.get('work_location', '').strip(),
+                            'bg': row.get('bg', '').strip(),
+                            'division': row.get('division', '').strip(),
+                            'bau': row.get('bau', '').strip(),
+                            'employee_status': row.get('employee_status', '').strip()
                         })
 
     with open(os.path.join(folder, 'ecoi_resultados.csv'), 'w', newline='') as results_file:
