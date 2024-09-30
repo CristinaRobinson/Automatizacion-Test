@@ -134,7 +134,38 @@ def process_ecoi(files, folder):
                     creation_date = row.get('creation_date', '').strip()
                     declaration_status = row.get('declaration_status', '').strip().lower()
                     
-                    # Filter records based on creation date year
+                    # Handle rows with no creation_date (new employees)
+                    if not creation_date:
+                        ecoi_data.append({
+                            'Debe': "Invitar a declarar",
+                            'employee_name': row.get('employee_name', '').strip(),
+                            'employee_email': row.get('employee_email', '').strip(),
+                            'country': row.get('country', '').strip(),
+                            'region': row.get('region', '').strip(),
+                            'reminder_counter': row.get('reminder_counter', '').strip(),
+                            'last_reminder': row.get('last_reminder', '').strip(),
+                            'declaration_short_uid': row.get('declaration_short_uid', '').strip(),
+                            'declaration_full_uid': row.get('declaration_full_uid', '').strip(),
+                            'positive_answers': row.get('positive_answers', '').strip(),
+                            'declaration_status': declaration_status,
+                            'declaration_expired': row.get('declaration_expired', '').strip().lower(),
+                            'latest_declaration': row.get('latest_declaration', '').strip(),
+                            'classification': row.get('classification', '').strip(),
+                            'creation_date': creation_date,
+                            'last_change_date': row.get('last_change_date', '').strip(),
+                            'changed_by': row.get('changed_by', '').strip(),
+                            'language': row.get('language', '').strip(),
+                            'job_function': row.get('job_function', '').strip(),
+                            'work_location': row.get('work_location', '').strip(),
+                            'bg': row.get('bg', '').strip(),
+                            'division': row.get('division', '').strip(),
+                            'bau': row.get('bau', '').strip(),
+                            'employee_status': row.get('employee_status', '').strip()
+                        })
+                        continue
+
+                    # For rows with a creation_date, process based on year and status
+                    include_row = False
                     try:
                         if " " in creation_date:
                             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y %H:%M")
@@ -142,12 +173,14 @@ def process_ecoi(files, folder):
                             creation_date_dt = datetime.strptime(creation_date, "%d/%m/%Y")
                     except ValueError:
                         continue
-
+                    
                     # Include only records from 2023
                     if creation_date_dt.year == 2023:
-                        # Calculate status based on creation date
+                        include_row = True
+                    
+                    # Include rows that match status conditions
+                    if include_row:
                         debe_status = calculate_declaration_status_and_reminders(creation_date)
-
                         ecoi_data.append({
                             'Debe': debe_status,
                             'employee_name': row.get('employee_name', '').strip(),
