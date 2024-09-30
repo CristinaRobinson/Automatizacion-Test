@@ -151,12 +151,11 @@ def process_ecoi(files, folder):
                     declaration_status = row.get('declaration_status', '').strip().lower()
                     declaration_expired = row.get('declaration_expired', '').strip().lower()
                     
-                    # Filter for entries with no creation_date or made in 2023
-                    include_row = False
-                    
+                    # If no creation_date, include as a new employee
                     if not creation_date:
-                        include_row = True  # Include if no creation_date, new employee
+                        include_row = True
                     else:
+                        include_row = False
                         # Parse creation_date
                         try:
                             if " " in creation_date:
@@ -170,8 +169,8 @@ def process_ecoi(files, folder):
                         if creation_date_dt.year == 2023:
                             include_row = True
                     
-                    # Check conditions for declaration_status and declaration_expired
-                    if include_row and declaration_status == 'closed' and declaration_expired in ['expired', 'about to expire']:
+                    # Include rows that are either new or match status conditions
+                    if include_row or (declaration_status == 'closed' and declaration_expired in ['expired', 'about to expire']):
                         employee_name = row.get('employee_name', '').strip()
                         employee_email = row.get('employee_email', '').strip()
                         country = row.get('country', '').strip()
