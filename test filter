@@ -51,7 +51,7 @@ def calculate_fase_recordatorio(fecha_entrada):
         dias_desde_ultimo_recordatorio = dias_desde_entrada - 83
         return f"Quinta fase: Comunicación con su N+1 ({dias_desde_ultimo_recordatorio} días desde el último recordatorio)"
 
-# Calculate declaration status for ECOI as per the new refined logic
+# Calculate declaration status for ECOI with correct reminders and expiry details
 def calculate_declaration_status_and_reminders(creation_date, declaration_expired):
     today = datetime.today()
     
@@ -70,27 +70,27 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     next_due_date = add_one_year(creation_date_dt)
     days_to_expiry = (next_due_date - today).days
     
-    declaration_expired = declaration_expired.strip().lower()
+    # If already expired
+    if days_to_expiry < 0:
+        return "Expirado"
     
-    if declaration_expired == 'expired':
-        return "Expirado"
-    elif days_to_expiry > 0:
-        months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
-        if next_due_date.day < today.day:
-            months_to_expiry -= 1
-            
-        start_of_expiry_month = today + timedelta(days=30*months_to_expiry)
-        remaining_days = (next_due_date - start_of_expiry_month).days
+    # Calculate months and days to expiry
+    months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
+    if next_due_date.day < today.day:
+        months_to_expiry -= 1
 
-        if remaining_days < 0:
-            remaining_days = (next_due_date - (start_of_expiry_month - timedelta(days=30))).days
-        
-        if months_to_expiry == 0:
-            return f"{days_to_expiry} días para que expire"
-        else:
-            return f"{months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''} para que expire"
-    else:
-        return "Expirado"
+    start_of_expiry_month = today + timedelta(days=30 * months_to_expiry)
+    remaining_days = (next_due_date - start_of_expiry_month).days
+
+    if remaining_days < 0:
+        remaining_days = (next_due_date - (start_of_expiry_month - timedelta(days=30))).days
+
+    # If within 1 month, mark as needing a reminder
+    if days_to_expiry <= 30:
+        return "Mandar reminder"
+    
+    # If not expired, show time remaining
+    return f"Expira en {months_to_expiry} mes{'es' if months_to_expiry > 1 else ''} y {remaining_days} día{'s' if remaining_days != 1 else ''}"
 
 def process_moocs(files, folder):
     moocs_filter = ["ethics", "anticorruption"]
