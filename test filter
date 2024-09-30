@@ -65,11 +65,11 @@ def calculate_declaration_status_and_reminders(creation_date, declaration_expire
     next_due_date = add_one_year(creation_date_dt)
     days_to_expiry = (next_due_date - today).days
     
-    # If already expired or within 1 month to expire
+    # If expired or within 1 month (0-30 days), mark as needing a reminder
     if days_to_expiry < 0 or days_to_expiry <= 30:
         return "Mandar reminder"
     
-    # If more than 30 days left, calculate remaining time
+    # Calculate remaining months and days for declarations not expiring soon
     months_to_expiry = (next_due_date.year - today.year) * 12 + (next_due_date.month - today.month)
     if next_due_date.day < today.day:
         months_to_expiry -= 1
@@ -112,7 +112,7 @@ def process_moocs(files, folder):
                             moocs_data[name]['fecha'] = entry_date
                             moocs_data[name]['fase_recordatorio'] = calculate_fase_recordatorio(entry_date)
 
-        with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
+    with open(os.path.join(folder, 'moocs_resultados.csv'), 'w', newline='') as results_file:
         writer = csv.writer(results_file)
         writer.writerow(['Name', 'Email', 'Job Function', 'Work Location', 'Business Group', 'Division', 'BAU', 'Moocs Pendientes', 'Fase de Recordatorio'])
         
