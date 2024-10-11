@@ -301,3 +301,10 @@ root.mainloop()
              IF(OR('TFAs & MPs'!J2="Turkey", 'TFAs & MPs'!J2="Tunisia"), 
                 "Middle East", 
                 "Other Region")))))
+
+
+
+
+/////
+
+=FILTER('Excel Output'!C:C & " - " & 'Excel Output'!U:U, ('Excel Output'!B:B="TFA") * ('Excel Output'!U:U="Nombre de la región"))
