@@ -282,3 +282,22 @@ search_button = tk.Button(root, text='Iniciar procesamiento', command=search,
 search_button.pack(pady=20)
 
 root.mainloop()
+
+
+
+=IF(OR('TFAs & MPs'!J2="United States", 'TFAs & MPs'!J2="Canada"), 
+    "USA/CAN", 
+    IF(OR('TFAs & MPs'!J2="Mexico", 'TFAs & MPs'!J2="Brazil", 'TFAs & MPs'!J2="Argentina"), 
+       "MX y SAO", 
+       IF(OR('TFAs & MPs'!J2="Germany", 'TFAs & MPs'!J2="France", 'TFAs & MPs'!J2="Italy", 
+             'TFAs & MPs'!J2="Czech Republic", 'TFAs & MPs'!J2="Poland", 'TFAs & MPs'!J2="Netherlands", 
+             'TFAs & MPs'!J2="Portugal", 'TFAs & MPs'!J2="Spain", 'TFAs & MPs'!J2="Switzerland", 
+             'TFAs & MPs'!J2="United Kingdom", 'TFAs & MPs'!J2="Hungary", 'TFAs & MPs'!J2="Slovakia", 
+             'TFAs & MPs'!J2="Sweden", 'TFAs & MPs'!J2="Romania"), 
+          "Europe", 
+          IF(OR('TFAs & MPs'!J2="China", 'TFAs & MPs'!J2="Japan", 'TFAs & MPs'!J2="Korea (the Republic of)", 
+                'TFAs & MPs'!J2="Taiwan", 'TFAs & MPs'!J2="Thailand", 'TFAs & MPs'!J2="India"), 
+             "Asia", 
+             IF(OR('TFAs & MPs'!J2="Turkey", 'TFAs & MPs'!J2="Tunisia"), 
+                "Middle East", 
+                "Other Region")))))
